@@ -7984,7 +7984,7 @@ show_autocmd(AutoPat *ap, event_T event)
 	    msg_outtrans(ac->cmd);
 #ifdef FEAT_EVAL
 	    if (p_verbose > 0)
-		last_set_msg(ac->scriptID);
+		last_set_msg(&ac->scriptID);
 #endif
 	    if (got_int)
 		return;
@@ -8868,7 +8868,7 @@ do_autocmd_event(
 	    ac->cmd = vim_strsave(cmd);
 #ifdef FEAT_EVAL
 	    ac->scriptID = current_SID;
-	    ac->script_lnum = current_slnum + sourcing_lnum;
+	    ac->scriptID.lnum += sourcing_lnum;
 #endif
 	    if (ac->cmd == NULL)
 	    {
@@ -9436,7 +9436,6 @@ apply_autocmds_group(
     AutoPat	*ap;
 #ifdef FEAT_EVAL
     scid_T	save_current_SID;
-    linenr_T	save_current_slnum;
     void	*save_funccalp;
     char_u	*save_cmdarg;
     long	save_cmdbang;
@@ -9646,8 +9645,6 @@ apply_autocmds_group(
 
 #ifdef FEAT_EVAL
     save_current_SID = current_SID;
-    save_current_slnum = current_slnum;
-    current_slnum = 0;
 
 # ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)
@@ -9752,7 +9749,6 @@ apply_autocmds_group(
     autocmd_match = save_autocmd_match;
 #ifdef FEAT_EVAL
     current_SID = save_current_SID;
-    current_slnum = save_current_slnum;
     restore_funccal(save_funccalp);
 # ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)
@@ -9977,7 +9973,6 @@ getnextac(int c UNUSED, void *cookie, int indent UNUSED)
     autocmd_nested = ac->nested;
 #ifdef FEAT_EVAL
     current_SID = ac->scriptID;
-    current_slnum = ac->script_lnum;
 #endif
     if (ac->last)
 	acp->nextcmd = NULL;

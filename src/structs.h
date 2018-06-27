@@ -66,13 +66,20 @@ typedef struct growarray
 typedef struct window_S		win_T;
 typedef struct wininfo_S	wininfo_T;
 typedef struct frame_S		frame_T;
-typedef int			scid_T;		/* script ID */
 typedef struct file_buffer	buf_T;  /* forward declaration */
 typedef struct terminal_S	term_T;
 
 #ifdef FEAT_MENU
 typedef struct VimMenu vimmenu_T;
 #endif
+
+/*
+ * Script ID.
+ */
+typedef struct {
+    int		fnum;
+    linenr_T	lnum;
+} scid_T;
 
 /*
  * Reference to a buffer that stores the value of buf_free_count.
@@ -278,7 +285,7 @@ typedef struct
 #endif
 
 #ifdef FEAT_EVAL
-    int		wo_scriptID[WV_COUNT];	/* SIDs for window-local options */
+    scid_T	wo_scriptID[WV_COUNT];	/* SIDs for window-local options */
 # define w_p_scriptID w_onebuf_opt.wo_scriptID
 #endif
 } winopt_T;
@@ -541,7 +548,7 @@ typedef struct expand
     int		xp_pattern_len;		/* bytes in xp_pattern before cursor */
 #if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
     char_u	*xp_arg;		/* completion function */
-    int		xp_scriptID;		/* SID for completion function */
+    scid_T	xp_scriptID;		/* SID for completion function */
 #endif
     int		xp_backslash;		/* one of the XP_BS_ values */
 #ifndef BACKSLASH_IN_FILENAME
@@ -1363,8 +1370,6 @@ typedef struct
 #endif
     scid_T	uf_script_ID;	/* ID of script where function was defined,
 				   used for s: variables */
-    linenr_T	uf_script_lnum;	/* the line-number of script where function
-				   was defined */
     int		uf_refcount;	/* reference count, see func_name_refcount() */
     funccall_T	*uf_scoped;	/* l: local variables for closure */
     char_u	uf_name[1];	/* name of function (actually longer); can
@@ -2123,7 +2128,7 @@ struct file_buffer
     int		b_p_initialized;	/* set when options initialized */
 
 #ifdef FEAT_EVAL
-    int		b_p_scriptID[BV_COUNT];	/* SIDs for buffer-local options */
+    scid_T	b_p_scriptID[BV_COUNT];	/* SIDs for buffer-local options */
 #endif
 
     int		b_p_ai;		/* 'autoindent' */

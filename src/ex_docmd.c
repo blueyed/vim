@@ -3246,6 +3246,7 @@ find_ucmd(
 		    {
 			xp->xp_arg = uc->uc_compl_arg;
 			xp->xp_scriptID = uc->uc_scriptID;
+			xp->xp_scriptID.lnum += sourcing_lnum;
 		    }
 #  endif
 # endif
@@ -5831,6 +5832,7 @@ uc_add_command(
     cmd->uc_compl = compl;
 #ifdef FEAT_EVAL
     cmd->uc_scriptID = current_SID;
+    cmd->uc_scriptID.lnum += sourcing_lnum;
 # ifdef FEAT_CMDL_COMPL
     cmd->uc_compl_arg = compl_arg;
 # endif
@@ -6051,7 +6053,7 @@ uc_list(char_u *name, size_t name_len)
 	    msg_outtrans_special(cmd->uc_rep, FALSE);
 #ifdef FEAT_EVAL
 	    if (p_verbose > 0)
-		last_set_msg(cmd->uc_scriptID);
+		last_set_msg(&cmd->uc_scriptID);
 #endif
 	    out_flush();
 	    ui_breakcheck();

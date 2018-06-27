@@ -326,8 +326,7 @@ EXTERN int	want_garbage_collect INIT(= FALSE);
 EXTERN int	garbage_collect_at_exit INIT(= FALSE);
 
 /* ID of script being sourced or was sourced to define the current function. */
-EXTERN scid_T	current_SID INIT(= 0);
-EXTERN linenr_T	current_slnum INIT(= 0);
+EXTERN scid_T	current_SID INIT(= {0 COMMA 0});
 #endif
 
 EXTERN int	did_source_packages INIT(= FALSE);

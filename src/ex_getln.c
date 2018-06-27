@@ -5286,7 +5286,7 @@ call_user_expand_func(
 {
     int		keep = 0;
     typval_T	args[4];
-    int		save_current_SID = current_SID;
+    scid_T	save_current_SID = current_SID;
     char_u	*pat = NULL;
     void	*ret;
     struct cmdline_info	    save_ccline;

@@ -1495,8 +1495,8 @@ list_vim_vars(int *first)
     static void
 list_script_vars(int *first)
 {
-    if (current_SID > 0 && current_SID <= ga_scripts.ga_len)
-	list_hashtable_vars(&SCRIPT_VARS(current_SID),
+    if (current_SID.fnum > 0 && current_SID.fnum <= ga_scripts.ga_len)
+	list_hashtable_vars(&SCRIPT_VARS(current_SID.fnum),
 						(char_u *)"s:", FALSE, first);
 }
 
@@ -7202,7 +7202,7 @@ find_var_in_ht(
 	/* Must be something like "s:", otherwise "ht" would be NULL. */
 	switch (htname)
 	{
-	    case 's': return &SCRIPT_SV(current_SID)->sv_var;
+	    case 's': return &SCRIPT_SV(current_SID.fnum)->sv_var;
 	    case 'g': return &globvars_var;
 	    case 'v': return &vimvars_var;
 	    case 'b': return &curbuf->b_bufvar;
@@ -7286,8 +7286,8 @@ find_var_ht(char_u *name, char_u **varname)
     if (*name == 'l')				/* l: local function variable */
 	return get_funccal_local_ht();
     if (*name == 's'				/* script variable */
-	    && current_SID > 0 && current_SID <= ga_scripts.ga_len)
-	return &SCRIPT_VARS(current_SID);
+	    && current_SID.fnum > 0 && current_SID.fnum <= ga_scripts.ga_len)
+	return &SCRIPT_VARS(current_SID.fnum);
     return NULL;
 }
 
@@ -7312,13 +7312,13 @@ get_var_value(char_u *name)
  * sourcing this script and when executing functions defined in the script.
  */
     void
-new_script_vars(scid_T id)
+new_script_vars(int id)
 {
     int		i;
     hashtab_T	*ht;
     scriptvar_T *sv;
 
-    if (ga_grow(&ga_scripts, (int)(id - ga_scripts.ga_len)) == OK)
+    if (ga_grow(&ga_scripts, id - ga_scripts.ga_len) == OK)
     {
 	/* Re-allocating ga_data means that an ht_array pointing to
 	 * ht_smallarray becomes invalid.  We can recognize this: ht_mask is
@@ -8729,13 +8729,13 @@ store_session_globals(FILE *fd)
  * Should only be invoked when 'verbose' is non-zero.
  */
     void
-last_set_msg(scid_T scriptID)
+last_set_msg(scid_T *scriptID)
 {
     char_u *p;
 
-    if (scriptID != 0)
+    if (scriptID != NULL && scriptID->fnum != 0)
     {
-	p = home_replace_save(NULL, get_scriptname(scriptID));
+	p = home_replace_save(NULL, get_scriptname(scriptID->fnum));
 	if (p != NULL)
 	{
 	    verbose_enter();

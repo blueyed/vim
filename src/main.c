@@ -2912,13 +2912,13 @@ exe_pre_commands(mparm_T *parmp)
 	curwin->w_cursor.lnum = 0; /* just in case.. */
 	sourcing_name = (char_u *)_("pre-vimrc command line");
 # ifdef FEAT_EVAL
-	current_SID = SID_CMDARG;
+	current_SID.fnum = SID_CMDARG;
 # endif
 	for (i = 0; i < cnt; ++i)
 	    do_cmdline_cmd(cmds[i]);
 	sourcing_name = NULL;
 # ifdef FEAT_EVAL
-	current_SID = 0;
+	current_SID.fnum = 0;
 # endif
 	TIME_MSG("--cmd commands");
     }
@@ -2942,7 +2942,7 @@ exe_commands(mparm_T *parmp)
 	curwin->w_cursor.lnum = 0;
     sourcing_name = (char_u *)"command line";
 #ifdef FEAT_EVAL
-    current_SID = SID_CARG;
+    current_SID.fnum = SID_CARG;
 #endif
     for (i = 0; i < parmp->n_commands; ++i)
     {
@@ -2952,7 +2952,7 @@ exe_commands(mparm_T *parmp)
     }
     sourcing_name = NULL;
 #ifdef FEAT_EVAL
-    current_SID = 0;
+    current_SID.fnum = 0;
 #endif
     if (curwin->w_cursor.lnum == 0)
 	curwin->w_cursor.lnum = 1;
@@ -3160,7 +3160,6 @@ process_env(
     linenr_T	save_sourcing_lnum;
 #ifdef FEAT_EVAL
     scid_T	save_sid;
-    linenr_T	save_current_slnum;
 #endif
 
     if ((initstr = mch_getenv(env)) != NULL && *initstr != NUL)
@@ -3173,16 +3172,14 @@ process_env(
 	sourcing_lnum = 0;
 #ifdef FEAT_EVAL
 	save_sid = current_SID;
-	current_SID = SID_ENV;
-	save_current_slnum = current_slnum;
-	current_slnum = 0;
+	current_SID.fnum = SID_ENV;
+	current_SID.lnum = 0;
 #endif
 	do_cmdline_cmd(initstr);
 	sourcing_name = save_sourcing_name;
 	sourcing_lnum = save_sourcing_lnum;
 #ifdef FEAT_EVAL
 	current_SID = save_sid;
-	current_slnum = save_current_slnum;
 #endif
 	return OK;
     }

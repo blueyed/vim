@@ -415,7 +415,7 @@ struct vimoption
     char_u	*def_val[2];	/* default values for variable (vi and vim) */
 #ifdef FEAT_EVAL
     scid_T	scriptID;	/* script in which the option was last set */
-# define SCRIPTID_INIT , 0
+# define SCRIPTID_INIT , {0, 0}
 #else
 # define SCRIPTID_INIT
 #endif
@@ -3314,7 +3314,7 @@ static char_u *did_set_spell_option(int is_spellfile);
 static char_u *compile_cap_prog(synblock_T *synblock);
 #endif
 #ifdef FEAT_EVAL
-static void set_option_scriptID_idx(int opt_idx, int opt_flags, int id);
+static void set_option_scriptID_idx(int opt_idx, int opt_flags, scid_T *scid);
 #endif
 static char_u *set_bool_option(int opt_idx, char_u *varp, int value, int opt_flags);
 static char_u *set_num_option(int opt_idx, char_u *varp, long value, char_u *errbuf, size_t errbuflen, int opt_flags);
@@ -3854,7 +3854,7 @@ set_option_default(
     }
 
 #ifdef FEAT_EVAL
-    set_option_scriptID_idx(opt_idx, opt_flags, current_SID);
+    set_option_scriptID_idx(opt_idx, opt_flags, &current_SID);
 #endif
 }
 
@@ -4679,12 +4679,12 @@ do_set(
 		    {
 			/* Mention where the option was last set. */
 			if (varp == options[opt_idx].var)
-			    last_set_msg(options[opt_idx].scriptID);
+			    last_set_msg(&options[opt_idx].scriptID);
 			else if ((int)options[opt_idx].indir & PV_WIN)
-			    last_set_msg(curwin->w_p_scriptID[
+			    last_set_msg(&curwin->w_p_scriptID[
 				      (int)options[opt_idx].indir & PV_MASK]);
 			else if ((int)options[opt_idx].indir & PV_BUF)
-			    last_set_msg(curbuf->b_p_scriptID[
+			    last_set_msg(&curbuf->b_p_scriptID[
 				      (int)options[opt_idx].indir & PV_MASK]);
 		    }
 #endif
@@ -5898,7 +5898,7 @@ set_string_option_direct(
     int		opt_idx,
     char_u	*val,
     int		opt_flags,	/* OPT_FREE, OPT_LOCAL and/or OPT_GLOBAL */
-    int		set_sid UNUSED)
+    int		set_sid)
 {
     char_u	*s;
     char_u	**varp;
@@ -5943,8 +5943,18 @@ set_string_option_direct(
 	}
 # ifdef FEAT_EVAL
 	if (set_sid != SID_NONE)
-	    set_option_scriptID_idx(idx, opt_flags,
-					set_sid == 0 ? current_SID : set_sid);
+	{
+	    scid_T sid;
+
+	    if (set_sid == 0)
+		sid = current_SID;
+	    else
+	    {
+		sid.fnum = set_sid;
+		sid.lnum = 0;
+	    }
+	    set_option_scriptID_idx(idx, opt_flags, &sid);
+	}
 # endif
     }
 }
@@ -7656,7 +7666,7 @@ did_set_string_option(
     {
 #ifdef FEAT_EVAL
 	/* Remember where the option was set. */
-	set_option_scriptID_idx(opt_idx, opt_flags, current_SID);
+	set_option_scriptID_idx(opt_idx, opt_flags, &current_SID);
 #endif
 	/*
 	 * Free string options that are in allocated memory.
@@ -8219,21 +8229,24 @@ compile_cap_prog(synblock_T *synblock)
  * window-local value.
  */
     static void
-set_option_scriptID_idx(int opt_idx, int opt_flags, int id)
+set_option_scriptID_idx(int opt_idx, int opt_flags, scid_T *scid)
 {
     int		both = (opt_flags & (OPT_LOCAL | OPT_GLOBAL)) == 0;
     int		indir = (int)options[opt_idx].indir;
+    scid_T	curr_sid = *scid;
+
+    curr_sid.lnum += sourcing_lnum;
 
     /* Remember where the option was set.  For local options need to do that
      * in the buffer or window structure. */
     if (both || (opt_flags & OPT_GLOBAL) || (indir & (PV_BUF|PV_WIN)) == 0)
-	options[opt_idx].scriptID = id;
+	options[opt_idx].scriptID = curr_sid;
     if (both || (opt_flags & OPT_LOCAL))
     {
 	if (indir & PV_BUF)
-	    curbuf->b_p_scriptID[indir & PV_MASK] = id;
+	    curbuf->b_p_scriptID[indir & PV_MASK] = curr_sid;
 	else if (indir & PV_WIN)
-	    curwin->w_p_scriptID[indir & PV_MASK] = id;
+	    curwin->w_p_scriptID[indir & PV_MASK] = curr_sid;
     }
 }
 #endif
@@ -8262,7 +8275,7 @@ set_bool_option(
     *(int *)varp = value;	    /* set the new value */
 #ifdef FEAT_EVAL
     /* Remember where the option was set. */
-    set_option_scriptID_idx(opt_idx, opt_flags, current_SID);
+    set_option_scriptID_idx(opt_idx, opt_flags, &current_SID);
 #endif
 
 #ifdef FEAT_GUI
@@ -8898,7 +8911,7 @@ set_num_option(
     *pp = value;
 #ifdef FEAT_EVAL
     /* Remember where the option was set. */
-    set_option_scriptID_idx(opt_idx, opt_flags, current_SID);
+    set_option_scriptID_idx(opt_idx, opt_flags, &current_SID);
 #endif
 #ifdef FEAT_GUI
     need_mouse_correct = TRUE;

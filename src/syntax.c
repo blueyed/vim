@@ -7507,7 +7507,8 @@ do_highlight(
 	    }
 	    else if (HL_TABLE()[from_id - 1].sg_link != to_id
 #ifdef FEAT_EVAL
-		    || HL_TABLE()[from_id - 1].sg_scriptID != current_SID
+		    || HL_TABLE()[from_id - 1].sg_scriptID.fnum
+							    != current_SID.fnum
 #endif
 		    || HL_TABLE()[from_id - 1].sg_cleared)
 	    {
@@ -7516,6 +7517,7 @@ do_highlight(
 		HL_TABLE()[from_id - 1].sg_link = to_id;
 #ifdef FEAT_EVAL
 		HL_TABLE()[from_id - 1].sg_scriptID = current_SID;
+		HL_TABLE()[from_id - 1].sg_scriptID.lnum += sourcing_lnum;
 #endif
 		HL_TABLE()[from_id - 1].sg_cleared = FALSE;
 		redraw_all_later(SOME_VALID);
@@ -8278,6 +8280,7 @@ do_highlight(
 	    set_hl_attr(idx);
 #ifdef FEAT_EVAL
 	HL_TABLE()[idx].sg_scriptID = current_SID;
+	HL_TABLE()[idx].sg_scriptID.lnum += sourcing_lnum;
 #endif
     }
 
@@ -8404,7 +8407,10 @@ highlight_clear(int idx)
     /* Clear the script ID only when there is no link, since that is not
      * cleared. */
     if (HL_TABLE()[idx].sg_link == 0)
-	HL_TABLE()[idx].sg_scriptID = 0;
+    {
+	HL_TABLE()[idx].sg_scriptID.fnum = 0;
+	HL_TABLE()[idx].sg_scriptID.lnum = 0;
+    }
 #endif
 }
 
@@ -9272,7 +9278,7 @@ highlight_list_one(int id)
 	highlight_list_arg(id, didh, LIST_STRING, 0, (char_u *)"cleared", "");
 #ifdef FEAT_EVAL
     if (p_verbose > 0)
-	last_set_msg(sgp->sg_scriptID);
+	last_set_msg(&sgp->sg_scriptID);
 #endif
 }
 

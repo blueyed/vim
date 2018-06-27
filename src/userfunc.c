@@ -303,7 +303,7 @@ get_lambda_tv(char_u **arg, typval_T *rettv, int evaluate)
 	fp->uf_flags = flags;
 	fp->uf_calls = 0;
 	fp->uf_script_ID = current_SID;
-	fp->uf_script_lnum = current_slnum + sourcing_lnum - newlines.ga_len;
+	fp->uf_script_ID.lnum += sourcing_lnum - newlines.ga_len;
 
 	pt->pt_func = fp;
 	pt->pt_refcount = 1;
@@ -506,11 +506,11 @@ fname_trans_sid(char_u *name, char_u *fname_buf, char_u **tofree, int *error)
 	i = 3;
 	if (eval_fname_sid(name))	/* "<SID>" or "s:" */
 	{
-	    if (current_SID <= 0)
+	    if (current_SID.fnum <= 0)
 		*error = ERROR_SCRIPT;
 	    else
 	    {
-		sprintf((char *)fname_buf + 3, "%ld_", (long)current_SID);
+		sprintf((char *)fname_buf + 3, "%ld_", (long)current_SID.fnum);
 		i = (int)STRLEN(fname_buf);
 	    }
 	}
@@ -692,7 +692,6 @@ call_user_func(
     char_u	*save_sourcing_name;
     linenr_T	save_sourcing_lnum;
     scid_T	save_current_SID;
-    linenr_T	save_current_slnum;
     int		using_sandbox = FALSE;
     funccall_T	*fc;
     int		save_did_emsg;
@@ -948,8 +947,6 @@ call_user_func(
 
     save_current_SID = current_SID;
     current_SID = fp->uf_script_ID;
-    save_current_slnum = current_slnum;
-    current_slnum = fp->uf_script_lnum - 1;
     save_did_emsg = did_emsg;
     did_emsg = FALSE;
 
@@ -1031,7 +1028,6 @@ call_user_func(
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
     current_SID = save_current_SID;
-    current_slnum = save_current_slnum;
 #ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)
 	script_prof_restore(&wait_start);
@@ -1579,7 +1575,7 @@ list_func_head(ufunc_T *fp, int indent)
 	MSG_PUTS(" closure");
     msg_clr_eos();
     if (p_verbose > 0)
-	last_set_msg(fp->uf_script_ID);
+	last_set_msg(&fp->uf_script_ID);
 }
 
 /*
@@ -1762,12 +1758,12 @@ trans_function_name(
 						       || eval_fname_sid(*pp))
 	{
 	    /* It's "s:" or "<SID>" */
-	    if (current_SID <= 0)
+	    if (current_SID.fnum <= 0)
 	    {
 		EMSG(_(e_usingsid));
 		goto theend;
 	    }
-	    sprintf((char *)sid_buf, "%ld_", (long)current_SID);
+	    sprintf((char *)sid_buf, "%ld_", (long)current_SID.fnum);
 	    lead += (int)STRLEN(sid_buf);
 	}
     }
@@ -2460,7 +2456,7 @@ ex_function(exarg_T *eap)
     fp->uf_flags = flags;
     fp->uf_calls = 0;
     fp->uf_script_ID = current_SID;
-    fp->uf_script_lnum = current_slnum + sourcing_lnum - newlines.ga_len - 1;
+    fp->uf_script_ID.lnum += sourcing_lnum - newlines.ga_len - 1;
     goto ret_free;
 
 erret:
@@ -3331,7 +3327,6 @@ get_func_line(
 	{
 	    retval = vim_strsave(((char_u **)(gap->ga_data))[fcp->linenr++]);
 	    sourcing_lnum = fcp->linenr;
-	    current_slnum = fp->uf_script_lnum;
 #ifdef FEAT_PROFILE
 	    if (do_profiling == PROF_YES)
 		func_line_start(cookie);
