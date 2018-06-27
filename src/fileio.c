@@ -9977,6 +9977,7 @@ getnextac(int c UNUSED, void *cookie, int indent UNUSED)
     autocmd_nested = ac->nested;
 #ifdef FEAT_EVAL
     current_SID = ac->scriptID;
+    current_slnum = ac->script_lnum;
 #endif
     if (ac->last)
 	acp->nextcmd = NULL;
