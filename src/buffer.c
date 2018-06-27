@@ -5414,9 +5414,9 @@ chk_modeline(
     int		retval = OK;
     char_u	*save_sourcing_name;
     linenr_T	save_sourcing_lnum;
-    linenr_T	save_sourcing_offset;
 #ifdef FEAT_EVAL
     scid_T	save_SID;
+    linenr_T	save_current_slnum;
 #endif
 
     prev = -1;
@@ -5460,10 +5460,8 @@ chk_modeline(
 	    return FAIL;
 
 	save_sourcing_lnum = sourcing_lnum;
-	save_sourcing_offset = sourcing_offset;
 	save_sourcing_name = sourcing_name;
 	sourcing_lnum = lnum;		/* prepare for emsg() */
-	sourcing_offset = 0;
 	sourcing_name = (char_u *)"modelines";
 
 	end = FALSE;
@@ -5505,10 +5503,13 @@ chk_modeline(
 #ifdef FEAT_EVAL
 		save_SID = current_SID;
 		current_SID = SID_MODELINE;
+		save_current_slnum = current_slnum;
+		current_slnum = 0;
 #endif
 		retval = do_set(s, OPT_MODELINE | OPT_LOCAL | flags);
 #ifdef FEAT_EVAL
 		current_SID = save_SID;
+		current_slnum = save_current_slnum;
 #endif
 		if (retval == FAIL)		/* stop if error found */
 		    break;
@@ -5517,7 +5518,6 @@ chk_modeline(
 	}
 
 	sourcing_lnum = save_sourcing_lnum;
-	sourcing_offset = save_sourcing_offset;
 	sourcing_name = save_sourcing_name;
 
 	vim_free(linecopy);

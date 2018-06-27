@@ -4296,13 +4296,13 @@ do_source(
     struct source_cookie    cookie;
     char_u		    *save_sourcing_name;
     linenr_T		    save_sourcing_lnum;
-    linenr_T		    save_sourcing_offset;
     char_u		    *p;
     char_u		    *fname_exp;
     char_u		    *firstline = NULL;
     int			    retval = FAIL;
 #ifdef FEAT_EVAL
     scid_T		    save_current_SID;
+    linenr_T		    save_current_slnum;
     static scid_T	    last_current_SID = 0;
     void		    *save_funccalp;
     int			    save_debug_break_level = debug_break_level;
@@ -4452,8 +4452,6 @@ do_source(
     sourcing_name = fname_exp;
     save_sourcing_lnum = sourcing_lnum;
     sourcing_lnum = 0;
-    save_sourcing_offset = sourcing_offset;
-    sourcing_offset = 0;
 
 #ifdef STARTUPTIME
     if (time_fd != NULL)
@@ -4475,6 +4473,8 @@ do_source(
      * If it's new, generate a new SID.
      */
     save_current_SID = current_SID;
+    save_current_slnum = current_slnum;
+    current_slnum = 0;
 # ifdef UNIX
     stat_ok = (mch_stat((char *)fname_exp, &st) >= 0);
 # endif
@@ -4595,7 +4595,6 @@ do_source(
 	EMSG(_(e_interr));
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
-    sourcing_offset = save_sourcing_offset;
     if (p_verbose > 1)
     {
 	verbose_enter();
@@ -4626,6 +4625,7 @@ do_source(
 #ifdef FEAT_EVAL
 almosttheend:
     current_SID = save_current_SID;
+    current_slnum = save_current_slnum;
     restore_funccal(save_funccalp);
 # ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)

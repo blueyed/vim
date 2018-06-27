@@ -3158,9 +3158,9 @@ process_env(
     char_u	*initstr;
     char_u	*save_sourcing_name;
     linenr_T	save_sourcing_lnum;
-    linenr_T	save_sourcing_offset;
 #ifdef FEAT_EVAL
     scid_T	save_sid;
+    linenr_T	save_current_slnum;
 #endif
 
     if ((initstr = mch_getenv(env)) != NULL && *initstr != NUL)
@@ -3169,20 +3169,20 @@ process_env(
 	    vimrc_found(NULL, NULL);
 	save_sourcing_name = sourcing_name;
 	save_sourcing_lnum = sourcing_lnum;
-	save_sourcing_offset = sourcing_offset;
 	sourcing_name = env;
 	sourcing_lnum = 0;
-	sourcing_offset = 0;
 #ifdef FEAT_EVAL
 	save_sid = current_SID;
 	current_SID = SID_ENV;
+	save_current_slnum = current_slnum;
+	current_slnum = 0;
 #endif
 	do_cmdline_cmd(initstr);
 	sourcing_name = save_sourcing_name;
 	sourcing_lnum = save_sourcing_lnum;
-	sourcing_offset = save_sourcing_offset;
 #ifdef FEAT_EVAL
 	current_SID = save_sid;
+	current_slnum = save_current_slnum;
 #endif
 	return OK;
     }

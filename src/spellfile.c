@@ -353,7 +353,6 @@ spell_load_file(
     int		len;
     char_u	*save_sourcing_name = sourcing_name;
     linenr_T	save_sourcing_lnum = sourcing_lnum;
-    linenr_T	save_sourcing_offset = sourcing_offset;
     slang_T	*lp = NULL;
     int		c = 0;
     int		res;
@@ -398,7 +397,6 @@ spell_load_file(
     /* Set sourcing_name, so that error messages mention the file name. */
     sourcing_name = fname;
     sourcing_lnum = 0;
-    sourcing_offset = 0;
 
     /*
      * <HEADER>: <fileID>
@@ -587,7 +585,6 @@ endOK:
 	fclose(fd);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
-    sourcing_offset = save_sourcing_offset;
 
     return lp;
 }

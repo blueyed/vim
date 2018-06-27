@@ -229,7 +229,6 @@ EXTERN int	msg_no_more INIT(= FALSE);  /* don't use more prompt, truncate
 
 EXTERN char_u	*sourcing_name INIT( = NULL);/* name of error message source */
 EXTERN linenr_T	sourcing_lnum INIT(= 0);    /* line number of the source file */
-EXTERN linenr_T	sourcing_offset INIT(= 0);  /* line number of the source file */
 
 #ifdef FEAT_EVAL
 EXTERN int	ex_nesting_level INIT(= 0);	/* nesting level */
@@ -328,6 +327,7 @@ EXTERN int	garbage_collect_at_exit INIT(= FALSE);
 
 /* ID of script being sourced or was sourced to define the current function. */
 EXTERN scid_T	current_SID INIT(= 0);
+EXTERN linenr_T	current_slnum INIT(= 0);
 #endif
 
 EXTERN int	did_source_packages INIT(= FALSE);

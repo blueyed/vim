@@ -7722,6 +7722,7 @@ typedef struct AutoCmd
     char	    last;		/* last command in list */
 #ifdef FEAT_EVAL
     scid_T	    scriptID;		/* script ID where defined */
+    linenr_T	    script_lnum;	/* line number where defined */
 #endif
     struct AutoCmd  *next;		/* Next AutoCmd in list */
 } AutoCmd;
@@ -8867,6 +8868,7 @@ do_autocmd_event(
 	    ac->cmd = vim_strsave(cmd);
 #ifdef FEAT_EVAL
 	    ac->scriptID = current_SID;
+	    ac->script_lnum = current_slnum + sourcing_lnum;
 #endif
 	    if (ac->cmd == NULL)
 	    {
@@ -9423,7 +9425,6 @@ apply_autocmds_group(
     int		retval = FALSE;
     char_u	*save_sourcing_name;
     linenr_T	save_sourcing_lnum;
-    linenr_T	save_sourcing_offset;
     char_u	*save_autocmd_fname;
     int		save_autocmd_fname_full;
     int		save_autocmd_bufnr;
@@ -9435,6 +9436,7 @@ apply_autocmds_group(
     AutoPat	*ap;
 #ifdef FEAT_EVAL
     scid_T	save_current_SID;
+    linenr_T	save_current_slnum;
     void	*save_funccalp;
     char_u	*save_cmdarg;
     long	save_cmdbang;
@@ -9641,11 +9643,11 @@ apply_autocmds_group(
     sourcing_name = NULL;	/* don't free this one */
     save_sourcing_lnum = sourcing_lnum;
     sourcing_lnum = 0;		/* no line number here */
-    save_sourcing_offset = sourcing_offset;
-    sourcing_offset = 0;		/* no line number here */
 
 #ifdef FEAT_EVAL
     save_current_SID = current_SID;
+    save_current_slnum = current_slnum;
+    current_slnum = 0;
 
 # ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)
@@ -9743,7 +9745,6 @@ apply_autocmds_group(
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
-    sourcing_offset = save_sourcing_offset;
     vim_free(autocmd_fname);
     autocmd_fname = save_autocmd_fname;
     autocmd_fname_full = save_autocmd_fname_full;
@@ -9751,6 +9752,7 @@ apply_autocmds_group(
     autocmd_match = save_autocmd_match;
 #ifdef FEAT_EVAL
     current_SID = save_current_SID;
+    current_slnum = save_current_slnum;
     restore_funccal(save_funccalp);
 # ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)
