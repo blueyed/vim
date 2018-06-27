@@ -9423,6 +9423,7 @@ apply_autocmds_group(
     int		retval = FALSE;
     char_u	*save_sourcing_name;
     linenr_T	save_sourcing_lnum;
+    linenr_T	save_sourcing_offset;
     char_u	*save_autocmd_fname;
     int		save_autocmd_fname_full;
     int		save_autocmd_bufnr;
@@ -9640,6 +9641,8 @@ apply_autocmds_group(
     sourcing_name = NULL;	/* don't free this one */
     save_sourcing_lnum = sourcing_lnum;
     sourcing_lnum = 0;		/* no line number here */
+    save_sourcing_offset = sourcing_offset;
+    sourcing_offset = 0;		/* no line number here */
 
 #ifdef FEAT_EVAL
     save_current_SID = current_SID;
@@ -9740,6 +9743,7 @@ apply_autocmds_group(
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
+    sourcing_offset = save_sourcing_offset;
     vim_free(autocmd_fname);
     autocmd_fname = save_autocmd_fname;
     autocmd_fname_full = save_autocmd_fname_full;

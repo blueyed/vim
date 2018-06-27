@@ -4296,6 +4296,7 @@ do_source(
     struct source_cookie    cookie;
     char_u		    *save_sourcing_name;
     linenr_T		    save_sourcing_lnum;
+    linenr_T		    save_sourcing_offset;
     char_u		    *p;
     char_u		    *fname_exp;
     char_u		    *firstline = NULL;
@@ -4451,6 +4452,8 @@ do_source(
     sourcing_name = fname_exp;
     save_sourcing_lnum = sourcing_lnum;
     sourcing_lnum = 0;
+    save_sourcing_offset = sourcing_offset;
+    sourcing_offset = 0;
 
 #ifdef STARTUPTIME
     if (time_fd != NULL)
@@ -4592,6 +4595,7 @@ do_source(
 	EMSG(_(e_interr));
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
+    sourcing_offset = save_sourcing_offset;
     if (p_verbose > 1)
     {
 	verbose_enter();

@@ -303,7 +303,7 @@ get_lambda_tv(char_u **arg, typval_T *rettv, int evaluate)
 	fp->uf_flags = flags;
 	fp->uf_calls = 0;
 	fp->uf_script_ID = current_SID;
-	fp->uf_script_lnum = sourcing_lnum - newlines.ga_len;
+	fp->uf_script_lnum = sourcing_offset + sourcing_lnum - newlines.ga_len;
 
 	pt->pt_func = fp;
 	pt->pt_refcount = 1;
@@ -691,6 +691,7 @@ call_user_func(
 {
     char_u	*save_sourcing_name;
     linenr_T	save_sourcing_lnum;
+    linenr_T	save_sourcing_offset;
     scid_T	save_current_SID;
     int		using_sandbox = FALSE;
     funccall_T	*fc;
@@ -858,7 +859,9 @@ call_user_func(
     ++RedrawingDisabled;
     save_sourcing_name = sourcing_name;
     save_sourcing_lnum = sourcing_lnum;
-    sourcing_lnum = fp->uf_script_lnum;
+    save_sourcing_offset = sourcing_offset;
+    sourcing_lnum = 1;
+    sourcing_offset = fp->uf_script_lnum - 1;
 
     if (fp->uf_flags & FC_SANDBOX)
     {
@@ -1027,6 +1030,7 @@ call_user_func(
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
+    sourcing_offset = save_sourcing_offset;
     current_SID = save_current_SID;
 #ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)
@@ -2456,7 +2460,7 @@ ex_function(exarg_T *eap)
     fp->uf_flags = flags;
     fp->uf_calls = 0;
     fp->uf_script_ID = current_SID;
-    fp->uf_script_lnum = sourcing_lnum - newlines.ga_len - 1;
+    fp->uf_script_lnum = sourcing_offset + sourcing_lnum - newlines.ga_len - 1;
     goto ret_free;
 
 erret:
@@ -3326,7 +3330,8 @@ get_func_line(
 	else
 	{
 	    retval = vim_strsave(((char_u **)(gap->ga_data))[fcp->linenr++]);
-	    sourcing_lnum = fp->uf_script_lnum + fcp->linenr;
+	    sourcing_lnum = fcp->linenr;
+	    sourcing_offset = fp->uf_script_lnum;
 #ifdef FEAT_PROFILE
 	    if (do_profiling == PROF_YES)
 		func_line_start(cookie);

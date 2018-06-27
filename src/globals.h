@@ -229,6 +229,7 @@ EXTERN int	msg_no_more INIT(= FALSE);  /* don't use more prompt, truncate
 
 EXTERN char_u	*sourcing_name INIT( = NULL);/* name of error message source */
 EXTERN linenr_T	sourcing_lnum INIT(= 0);    /* line number of the source file */
+EXTERN linenr_T	sourcing_offset INIT(= 0);  /* line number of the source file */
 
 #ifdef FEAT_EVAL
 EXTERN int	ex_nesting_level INIT(= 0);	/* nesting level */
