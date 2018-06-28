@@ -8729,13 +8729,13 @@ store_session_globals(FILE *fd)
  * Should only be invoked when 'verbose' is non-zero.
  */
     void
-last_set_msg(scid_T *scriptID)
+last_set_msg(scid_T scriptID)
 {
     char_u *p;
 
-    if (scriptID != NULL && scriptID->fnum != 0)
+    if (scriptID.fnum != 0)
     {
-	p = home_replace_save(NULL, get_scriptname(scriptID->fnum));
+	p = home_replace_save(NULL, get_scriptname(scriptID.fnum));
 	if (p != NULL)
 	{
 	    verbose_enter();

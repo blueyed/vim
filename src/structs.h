@@ -74,7 +74,7 @@ typedef struct VimMenu vimmenu_T;
 #endif
 
 /*
- * Script ID.
+ * ID of script.
  */
 typedef struct {
     int		fnum;

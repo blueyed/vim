@@ -4679,12 +4679,12 @@ do_set(
 		    {
 			/* Mention where the option was last set. */
 			if (varp == options[opt_idx].var)
-			    last_set_msg(&options[opt_idx].scriptID);
+			    last_set_msg(options[opt_idx].scriptID);
 			else if ((int)options[opt_idx].indir & PV_WIN)
-			    last_set_msg(&curwin->w_p_scriptID[
+			    last_set_msg(curwin->w_p_scriptID[
 				      (int)options[opt_idx].indir & PV_MASK]);
 			else if ((int)options[opt_idx].indir & PV_BUF)
-			    last_set_msg(&curbuf->b_p_scriptID[
+			    last_set_msg(curbuf->b_p_scriptID[
 				      (int)options[opt_idx].indir & PV_MASK]);
 		    }
 #endif

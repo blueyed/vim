@@ -6053,7 +6053,7 @@ uc_list(char_u *name, size_t name_len)
 	    msg_outtrans_special(cmd->uc_rep, FALSE);
 #ifdef FEAT_EVAL
 	    if (p_verbose > 0)
-		last_set_msg(&cmd->uc_scriptID);
+		last_set_msg(cmd->uc_scriptID);
 #endif
 	    out_flush();
 	    ui_breakcheck();
