@@ -3314,7 +3314,7 @@ static char_u *did_set_spell_option(int is_spellfile);
 static char_u *compile_cap_prog(synblock_T *synblock);
 #endif
 #ifdef FEAT_EVAL
-static void set_option_scriptID_idx(int opt_idx, int opt_flags, scid_T *scid);
+static void set_option_scriptID_idx(int opt_idx, int opt_flags, scid_T sid);
 #endif
 static char_u *set_bool_option(int opt_idx, char_u *varp, int value, int opt_flags);
 static char_u *set_num_option(int opt_idx, char_u *varp, long value, char_u *errbuf, size_t errbuflen, int opt_flags);
@@ -3854,7 +3854,7 @@ set_option_default(
     }
 
 #ifdef FEAT_EVAL
-    set_option_scriptID_idx(opt_idx, opt_flags, &current_SID);
+    set_option_scriptID_idx(opt_idx, opt_flags, current_SID);
 #endif
 }
 
@@ -5953,7 +5953,7 @@ set_string_option_direct(
 		sid.fnum = set_sid;
 		sid.lnum = 0;
 	    }
-	    set_option_scriptID_idx(idx, opt_flags, &sid);
+	    set_option_scriptID_idx(idx, opt_flags, sid);
 	}
 # endif
     }
@@ -7666,7 +7666,7 @@ did_set_string_option(
     {
 #ifdef FEAT_EVAL
 	/* Remember where the option was set. */
-	set_option_scriptID_idx(opt_idx, opt_flags, &current_SID);
+	set_option_scriptID_idx(opt_idx, opt_flags, current_SID);
 #endif
 	/*
 	 * Free string options that are in allocated memory.
@@ -8229,24 +8229,23 @@ compile_cap_prog(synblock_T *synblock)
  * window-local value.
  */
     static void
-set_option_scriptID_idx(int opt_idx, int opt_flags, scid_T *scid)
+set_option_scriptID_idx(int opt_idx, int opt_flags, scid_T sid)
 {
     int		both = (opt_flags & (OPT_LOCAL | OPT_GLOBAL)) == 0;
     int		indir = (int)options[opt_idx].indir;
-    scid_T	curr_sid = *scid;
 
-    curr_sid.lnum += sourcing_lnum;
+    sid.lnum += sourcing_lnum;
 
     /* Remember where the option was set.  For local options need to do that
      * in the buffer or window structure. */
     if (both || (opt_flags & OPT_GLOBAL) || (indir & (PV_BUF|PV_WIN)) == 0)
-	options[opt_idx].scriptID = curr_sid;
+	options[opt_idx].scriptID = sid;
     if (both || (opt_flags & OPT_LOCAL))
     {
 	if (indir & PV_BUF)
-	    curbuf->b_p_scriptID[indir & PV_MASK] = curr_sid;
+	    curbuf->b_p_scriptID[indir & PV_MASK] = sid;
 	else if (indir & PV_WIN)
-	    curwin->w_p_scriptID[indir & PV_MASK] = curr_sid;
+	    curwin->w_p_scriptID[indir & PV_MASK] = sid;
     }
 }
 #endif
@@ -8275,7 +8274,7 @@ set_bool_option(
     *(int *)varp = value;	    /* set the new value */
 #ifdef FEAT_EVAL
     /* Remember where the option was set. */
-    set_option_scriptID_idx(opt_idx, opt_flags, &current_SID);
+    set_option_scriptID_idx(opt_idx, opt_flags, current_SID);
 #endif
 
 #ifdef FEAT_GUI
@@ -8911,7 +8910,7 @@ set_num_option(
     *pp = value;
 #ifdef FEAT_EVAL
     /* Remember where the option was set. */
-    set_option_scriptID_idx(opt_idx, opt_flags, &current_SID);
+    set_option_scriptID_idx(opt_idx, opt_flags, current_SID);
 #endif
 #ifdef FEAT_GUI
     need_mouse_correct = TRUE;
