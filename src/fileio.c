@@ -7722,7 +7722,6 @@ typedef struct AutoCmd
     char	    last;		/* last command in list */
 #ifdef FEAT_EVAL
     scid_T	    scriptID;		/* script ID where defined */
-    linenr_T	    script_lnum;	/* line number where defined */
 #endif
     struct AutoCmd  *next;		/* Next AutoCmd in list */
 } AutoCmd;
