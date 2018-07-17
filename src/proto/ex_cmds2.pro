@@ -91,7 +91,7 @@ int source_level(void *cookie);
 int do_source(char_u *fname, int check_other, int is_vimrc);
 void ex_scriptnames(exarg_T *eap);
 void scriptnames_slash_adjust(void);
-char_u *get_scriptname(int id);
+char_u *get_scriptname(scid_T id);
 void free_scriptnames(void);
 char *fgets_cr(char *s, int n, FILE *stream);
 char_u *getsourceline(int c, void *cookie, int indent);

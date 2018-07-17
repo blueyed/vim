@@ -1866,9 +1866,9 @@ script_prof_save(
 {
     scriptitem_T    *si;
 
-    if (current_SID.fnum > 0 && current_SID.fnum <= script_items.ga_len)
+    if (current_SID > 0 && current_SID <= script_items.ga_len)
     {
-	si = &SCRIPT_ITEM(current_SID.fnum);
+	si = &SCRIPT_ITEM(current_SID);
 	if (si->sn_prof_on && si->sn_pr_nest++ == 0)
 	    profile_start(&si->sn_pr_child);
     }
@@ -1883,9 +1883,9 @@ script_prof_restore(proftime_T *tm)
 {
     scriptitem_T    *si;
 
-    if (current_SID.fnum > 0 && current_SID.fnum <= script_items.ga_len)
+    if (current_SID > 0 && current_SID <= script_items.ga_len)
     {
-	si = &SCRIPT_ITEM(current_SID.fnum);
+	si = &SCRIPT_ITEM(current_SID);
 	if (si->sn_prof_on && --si->sn_pr_nest == 0)
 	{
 	    profile_end(&si->sn_pr_child);
@@ -2003,8 +2003,8 @@ script_dump_profile(FILE *fd)
     int
 prof_def_func(void)
 {
-    if (current_SID.fnum > 0)
-	return SCRIPT_ITEM(current_SID.fnum).sn_pr_force;
+    if (current_SID > 0)
+	return SCRIPT_ITEM(current_SID).sn_pr_force;
     return FALSE;
 }
 
@@ -4301,8 +4301,8 @@ do_source(
     char_u		    *firstline = NULL;
     int			    retval = FAIL;
 #ifdef FEAT_EVAL
-    scid_T		    save_current_SID;
-    static int		    last_current_SID = 0;
+    sctx_T		    save_current_sctx;
+    static scid_T	    last_current_SID = 0;
     void		    *save_funccalp;
     int			    save_debug_break_level = debug_break_level;
     scriptitem_T	    *si = NULL;
@@ -4471,15 +4471,14 @@ do_source(
      * Check if this script was sourced before to finds its SID.
      * If it's new, generate a new SID.
      */
-    save_current_SID = current_SID;
-    current_SID.lnum = 0;
+    save_current_sctx = current_sctx;
+    current_SLN = 0;
 # ifdef UNIX
     stat_ok = (mch_stat((char *)fname_exp, &st) >= 0);
 # endif
-    for (current_SID.fnum = script_items.ga_len; current_SID.fnum > 0;
-							   --current_SID.fnum)
+    for (current_SID = script_items.ga_len; current_SID > 0; --current_SID)
     {
-	si = &SCRIPT_ITEM(current_SID.fnum);
+	si = &SCRIPT_ITEM(current_SID);
 	if (si->sn_name != NULL
 		&& (
 # ifdef UNIX
@@ -4493,13 +4492,13 @@ do_source(
 		fnamecmp(si->sn_name, fname_exp) == 0))
 	    break;
     }
-    if (current_SID.fnum == 0)
+    if (current_SID == 0)
     {
-	current_SID.fnum = ++last_current_SID;
-	if (ga_grow(&script_items,
-		       (int)(current_SID.fnum - script_items.ga_len)) == FAIL)
+	current_SID = ++last_current_SID;
+	if (ga_grow(&script_items, (int)(current_SID - script_items.ga_len))
+								      == FAIL)
 	    goto almosttheend;
-	while (script_items.ga_len < current_SID.fnum)
+	while (script_items.ga_len < current_SID)
 	{
 	    ++script_items.ga_len;
 	    SCRIPT_ITEM(script_items.ga_len).sn_name = NULL;
@@ -4507,7 +4506,7 @@ do_source(
 	    SCRIPT_ITEM(script_items.ga_len).sn_prof_on = FALSE;
 # endif
 	}
-	si = &SCRIPT_ITEM(current_SID.fnum);
+	si = &SCRIPT_ITEM(current_SID);
 	si->sn_name = fname_exp;
 	fname_exp = NULL;
 # ifdef UNIX
@@ -4522,7 +4521,7 @@ do_source(
 # endif
 
 	/* Allocate the local script variables to use for this script. */
-	new_script_vars(current_SID.fnum);
+	new_script_vars(current_SID);
     }
 
 # ifdef FEAT_PROFILE
@@ -4578,7 +4577,7 @@ do_source(
     if (do_profiling == PROF_YES)
     {
 	/* Get "si" again, "script_items" may have been reallocated. */
-	si = &SCRIPT_ITEM(current_SID.fnum);
+	si = &SCRIPT_ITEM(current_SID);
 	if (si->sn_prof_on)
 	{
 	    profile_end(&si->sn_pr_start);
@@ -4623,7 +4622,7 @@ do_source(
 
 #ifdef FEAT_EVAL
 almosttheend:
-    current_SID = save_current_SID;
+    current_sctx = save_current_sctx;
     restore_funccal(save_funccalp);
 # ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)
@@ -4680,7 +4679,7 @@ scriptnames_slash_adjust(void)
  * Get a pointer to a script name.  Used for ":verbose set".
  */
     char_u *
-get_scriptname(int id)
+get_scriptname(scid_T id)
 {
     if (id == SID_MODELINE)
 	return (char_u *)_("modeline");
@@ -5042,9 +5041,9 @@ script_line_start(void)
     scriptitem_T    *si;
     sn_prl_T	    *pp;
 
-    if (current_SID.fnum <= 0 || current_SID.fnum > script_items.ga_len)
+    if (current_SID <= 0 || current_SID > script_items.ga_len)
 	return;
-    si = &SCRIPT_ITEM(current_SID.fnum);
+    si = &SCRIPT_ITEM(current_SID);
     if (si->sn_prof_on && sourcing_lnum >= 1)
     {
 	/* Grow the array before starting the timer, so that the time spent
@@ -5077,9 +5076,9 @@ script_line_exec(void)
 {
     scriptitem_T    *si;
 
-    if (current_SID.fnum <= 0 || current_SID.fnum > script_items.ga_len)
+    if (current_SID <= 0 || current_SID > script_items.ga_len)
 	return;
-    si = &SCRIPT_ITEM(current_SID.fnum);
+    si = &SCRIPT_ITEM(current_SID);
     if (si->sn_prof_on && si->sn_prl_idx >= 0)
 	si->sn_prl_execed = TRUE;
 }
@@ -5093,9 +5092,9 @@ script_line_end(void)
     scriptitem_T    *si;
     sn_prl_T	    *pp;
 
-    if (current_SID.fnum <= 0 || current_SID.fnum > script_items.ga_len)
+    if (current_SID <= 0 || current_SID > script_items.ga_len)
 	return;
-    si = &SCRIPT_ITEM(current_SID.fnum);
+    si = &SCRIPT_ITEM(current_SID);
     if (si->sn_prof_on && si->sn_prl_idx >= 0
 				     && si->sn_prl_idx < si->sn_prl_ga.ga_len)
     {

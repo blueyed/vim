@@ -302,8 +302,8 @@ get_lambda_tv(char_u **arg, typval_T *rettv, int evaluate)
 	fp->uf_varargs = TRUE;
 	fp->uf_flags = flags;
 	fp->uf_calls = 0;
-	fp->uf_script_ID = current_SID;
-	fp->uf_script_ID.lnum += sourcing_lnum - newlines.ga_len;
+	fp->uf_sctx = current_sctx;
+	fp->uf_sctx.sc_lnum += sourcing_lnum - newlines.ga_len;
 
 	pt->pt_func = fp;
 	pt->pt_refcount = 1;
@@ -506,11 +506,11 @@ fname_trans_sid(char_u *name, char_u *fname_buf, char_u **tofree, int *error)
 	i = 3;
 	if (eval_fname_sid(name))	/* "<SID>" or "s:" */
 	{
-	    if (current_SID.fnum <= 0)
+	    if (current_SID <= 0)
 		*error = ERROR_SCRIPT;
 	    else
 	    {
-		sprintf((char *)fname_buf + 3, "%ld_", (long)current_SID.fnum);
+		sprintf((char *)fname_buf + 3, "%ld_", (long)current_SID);
 		i = (int)STRLEN(fname_buf);
 	    }
 	}
@@ -691,7 +691,7 @@ call_user_func(
 {
     char_u	*save_sourcing_name;
     linenr_T	save_sourcing_lnum;
-    scid_T	save_current_SID;
+    sctx_T	save_current_sctx;
     int		using_sandbox = FALSE;
     funccall_T	*fc;
     int		save_did_emsg;
@@ -945,8 +945,8 @@ call_user_func(
     }
 #endif
 
-    save_current_SID = current_SID;
-    current_SID = fp->uf_script_ID;
+    save_current_sctx = current_sctx;
+    current_sctx = fp->uf_sctx;
     save_did_emsg = did_emsg;
     did_emsg = FALSE;
 
@@ -1027,7 +1027,7 @@ call_user_func(
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
-    current_SID = save_current_SID;
+    current_sctx = save_current_sctx;
 #ifdef FEAT_PROFILE
     if (do_profiling == PROF_YES)
 	script_prof_restore(&wait_start);
@@ -1575,7 +1575,7 @@ list_func_head(ufunc_T *fp, int indent)
 	MSG_PUTS(" closure");
     msg_clr_eos();
     if (p_verbose > 0)
-	last_set_msg(fp->uf_script_ID);
+	last_set_msg(fp->uf_sctx);
 }
 
 /*
@@ -1758,12 +1758,12 @@ trans_function_name(
 						       || eval_fname_sid(*pp))
 	{
 	    /* It's "s:" or "<SID>" */
-	    if (current_SID.fnum <= 0)
+	    if (current_SID <= 0)
 	    {
 		EMSG(_(e_usingsid));
 		goto theend;
 	    }
-	    sprintf((char *)sid_buf, "%ld_", (long)current_SID.fnum);
+	    sprintf((char *)sid_buf, "%ld_", (long)current_SID);
 	    lead += (int)STRLEN(sid_buf);
 	}
     }
@@ -2455,8 +2455,8 @@ ex_function(exarg_T *eap)
 	flags |= FC_SANDBOX;
     fp->uf_flags = flags;
     fp->uf_calls = 0;
-    fp->uf_script_ID = current_SID;
-    fp->uf_script_ID.lnum += sourcing_lnum - newlines.ga_len - 1;
+    fp->uf_sctx = current_sctx;
+    fp->uf_sctx.sc_lnum += sourcing_lnum - newlines.ga_len - 1;
     goto ret_free;
 
 erret:

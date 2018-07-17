@@ -66,6 +66,7 @@ typedef struct growarray
 typedef struct window_S		win_T;
 typedef struct wininfo_S	wininfo_T;
 typedef struct frame_S		frame_T;
+typedef int			scid_T;		/* script ID */
 typedef struct file_buffer	buf_T;  /* forward declaration */
 typedef struct terminal_S	term_T;
 
@@ -74,12 +75,12 @@ typedef struct VimMenu vimmenu_T;
 #endif
 
 /*
- * ID of script.
+ * Information of script context (SCTX).
  */
 typedef struct {
-    int		fnum;
-    linenr_T	lnum;
-} scid_T;
+    scid_T	sc_scid;
+    linenr_T	sc_lnum;
+} sctx_T;
 
 /*
  * Reference to a buffer that stores the value of buf_free_count.
@@ -285,8 +286,8 @@ typedef struct
 #endif
 
 #ifdef FEAT_EVAL
-    scid_T	wo_scriptID[WV_COUNT];	/* SIDs for window-local options */
-# define w_p_scriptID w_onebuf_opt.wo_scriptID
+    sctx_T	wo_sctx[WV_COUNT];	/* SCTXs for window-local options */
+# define w_p_sctx w_onebuf_opt.wo_sctx
 #endif
 } winopt_T;
 
@@ -548,7 +549,7 @@ typedef struct expand
     int		xp_pattern_len;		/* bytes in xp_pattern before cursor */
 #if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL) && defined(FEAT_CMDL_COMPL)
     char_u	*xp_arg;		/* completion function */
-    scid_T	xp_scriptID;		/* SID for completion function */
+    sctx_T	xp_sctx;		/* SCTX for completion function */
 #endif
     int		xp_backslash;		/* one of the XP_BS_ values */
 #ifndef BACKSLASH_IN_FILENAME
@@ -1078,7 +1079,7 @@ struct mapblock
     char	m_nowait;	/* <nowait> used */
 #ifdef FEAT_EVAL
     char	m_expr;		/* <expr> used, m_str is an expression */
-    scid_T	m_script_ID;	/* ID of script where map was defined */
+    sctx_T	m_sctx;		/* SCTX where map was defined */
 #endif
 };
 
@@ -1368,7 +1369,7 @@ typedef struct
     int		uf_tml_idx;	/* index of line being timed; -1 if none */
     int		uf_tml_execed;	/* line being timed was executed */
 #endif
-    scid_T	uf_script_ID;	/* ID of script where function was defined,
+    sctx_T	uf_sctx;	/* SCTX where function was defined,
 				   used for s: variables */
     int		uf_refcount;	/* reference count, see func_name_refcount() */
     funccall_T	*uf_scoped;	/* l: local variables for closure */
@@ -2128,7 +2129,7 @@ struct file_buffer
     int		b_p_initialized;	/* set when options initialized */
 
 #ifdef FEAT_EVAL
-    scid_T	b_p_scriptID[BV_COUNT];	/* SIDs for buffer-local options */
+    sctx_T	b_p_sctx[BV_COUNT];	/* SCTXs for buffer-local options */
 #endif
 
     int		b_p_ai;		/* 'autoindent' */
