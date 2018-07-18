@@ -6919,7 +6919,7 @@ do_ucmd(exarg_T *eap)
     }
 
 #ifdef FEAT_EVAL
-    current_sctx = cmd->uc_sctx;
+    current_SID = cmd->uc_sctx.sc_scid;
 #endif
     (void)do_cmdline(buf, eap->getline, eap->cookie,
 				   DOCMD_VERBOSE|DOCMD_NOWAIT|DOCMD_KEYTYPED);
