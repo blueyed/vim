@@ -8742,6 +8742,13 @@ last_set_msg(sctx_T sctx)
 	    MSG_PUTS(_("\n\tLast set from "));
 	    MSG_PUTS(p);
 	    vim_free(p);
+	    if (sctx.sc_lnum > 0)
+	    {
+		char_u s[21];
+
+		vim_snprintf((char *)s, sizeof(s), ":%ld", sctx.sc_lnum);
+		MSG_PUTS(s);
+	    }
 	    verbose_leave();
 	}
     }
