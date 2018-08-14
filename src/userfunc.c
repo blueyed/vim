@@ -2609,6 +2609,9 @@ func_dump_profile(FILE *fd)
 		    fprintf(fd, "FUNCTION  <SNR>%s()\n", fp->uf_name + 3);
 		else
 		    fprintf(fd, "FUNCTION  %s()\n", fp->uf_name);
+		fprintf(fd, "    Source: %s:%li\n",
+			get_scriptname(fp->uf_sctx.sc_scid),
+			fp->uf_sctx.sc_lnum);
 		if (fp->uf_tm_count == 1)
 		    fprintf(fd, "Called 1 time\n");
 		else
