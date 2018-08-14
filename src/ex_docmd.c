@@ -29,7 +29,7 @@ typedef struct ucmd
     int		uc_compl;	/* completion type */
     int		uc_addr_type;	/* The command's address type */
 # ifdef FEAT_EVAL
-    scid_T	uc_scriptID;	/* SID where the command was defined */
+    sctx_T	uc_sctx;	/* SCTX where the command was defined */
 #  ifdef FEAT_CMDL_COMPL
     char_u	*uc_compl_arg;	/* completion argument if any */
 #  endif
@@ -3331,7 +3331,8 @@ find_ucmd(
 		    if (xp != NULL)
 		    {
 			xp->xp_arg = uc->uc_compl_arg;
-			xp->xp_scriptID = uc->uc_scriptID;
+			xp->xp_sctx = uc->uc_sctx;
+			xp->xp_sctx.sc_lnum += sourcing_lnum;
 		    }
 #  endif
 # endif
@@ -5916,7 +5917,8 @@ uc_add_command(
     cmd->uc_def = def;
     cmd->uc_compl = compl;
 #ifdef FEAT_EVAL
-    cmd->uc_scriptID = current_SID;
+    cmd->uc_sctx = current_sctx;
+    cmd->uc_sctx.sc_lnum += sourcing_lnum;
 # ifdef FEAT_CMDL_COMPL
     cmd->uc_compl_arg = compl_arg;
 # endif
@@ -6137,7 +6139,7 @@ uc_list(char_u *name, size_t name_len)
 	    msg_outtrans_special(cmd->uc_rep, FALSE);
 #ifdef FEAT_EVAL
 	    if (p_verbose > 0)
-		last_set_msg(cmd->uc_scriptID);
+		last_set_msg(cmd->uc_sctx);
 #endif
 	    out_flush();
 	    ui_breakcheck();
@@ -6902,7 +6904,7 @@ do_ucmd(exarg_T *eap)
     char_u	*split_buf = NULL;
     ucmd_T	*cmd;
 #ifdef FEAT_EVAL
-    scid_T	save_current_SID = current_SID;
+    sctx_T	save_current_sctx = current_sctx;
 #endif
 
     if (eap->cmdidx == CMD_USER)
@@ -7003,12 +7005,12 @@ do_ucmd(exarg_T *eap)
     }
 
 #ifdef FEAT_EVAL
-    current_SID = cmd->uc_scriptID;
+    current_SID = cmd->uc_sctx.sc_scid;
 #endif
     (void)do_cmdline(buf, eap->getline, eap->cookie,
 				   DOCMD_VERBOSE|DOCMD_NOWAIT|DOCMD_KEYTYPED);
 #ifdef FEAT_EVAL
-    current_SID = save_current_SID;
+    current_sctx = save_current_sctx;
 #endif
     vim_free(buf);
     vim_free(split_buf);
@@ -10732,14 +10734,16 @@ find_cmdline_var(char_u *src, int *usedlen)
 		    "<slnum>",		/* ":so" file line number */
 #define SPEC_SLNUM  (SPEC_SFILE + 1)
 		    "<afile>",		/* autocommand file name */
-#define SPEC_AFILE (SPEC_SLNUM + 1)
+#define SPEC_AFILE  (SPEC_SLNUM + 1)
 		    "<abuf>",		/* autocommand buffer number */
-#define SPEC_ABUF  (SPEC_AFILE + 1)
+#define SPEC_ABUF   (SPEC_AFILE + 1)
 		    "<amatch>",		/* autocommand match name */
 #define SPEC_AMATCH (SPEC_ABUF + 1)
+		    "<flnum>",		/* current file line number */
+#define SPEC_FLNUM  (SPEC_AMATCH + 1)
 #ifdef FEAT_CLIENTSERVER
 		    "<client>"
-# define SPEC_CLIENT (SPEC_AMATCH + 1)
+# define SPEC_CLIENT (SPEC_FLNUM + 1)
 #endif
     };
 
@@ -10995,6 +10999,7 @@ eval_vars(
 		    return NULL;
 		}
 		break;
+
 	case SPEC_SLNUM:	/* line in file for ":so" command */
 		if (sourcing_name == NULL || sourcing_lnum == 0)
 		{
@@ -11004,13 +11009,23 @@ eval_vars(
 		sprintf((char *)strbuf, "%ld", (long)sourcing_lnum);
 		result = strbuf;
 		break;
-#if defined(FEAT_CLIENTSERVER)
+
+#ifdef FEAT_EVAL
+	case SPEC_FLNUM:	/* line in file current executed */
+		sprintf((char *)strbuf, "%ld",
+					 (long)(current_SLN + sourcing_lnum));
+		result = strbuf;
+		break;
+#endif
+
+#ifdef FEAT_CLIENTSERVER
 	case SPEC_CLIENT:	/* Source of last submitted input */
 		sprintf((char *)strbuf, PRINTF_HEX_LONG_U,
 							(long_u)clientWindow);
 		result = strbuf;
 		break;
 #endif
+
 	default:
 		result = (char_u *)""; /* avoid gcc warning */
 		break;

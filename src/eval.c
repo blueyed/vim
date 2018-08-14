@@ -8729,19 +8729,26 @@ store_session_globals(FILE *fd)
  * Should only be invoked when 'verbose' is non-zero.
  */
     void
-last_set_msg(scid_T scriptID)
+last_set_msg(sctx_T sctx)
 {
     char_u *p;
 
-    if (scriptID != 0)
+    if (sctx.sc_scid != 0)
     {
-	p = home_replace_save(NULL, get_scriptname(scriptID));
+	p = home_replace_save(NULL, get_scriptname(sctx.sc_scid));
 	if (p != NULL)
 	{
 	    verbose_enter();
 	    MSG_PUTS(_("\n\tLast set from "));
 	    MSG_PUTS(p);
 	    vim_free(p);
+	    if (sctx.sc_lnum > 0)
+	    {
+		char_u s[21];
+
+		vim_snprintf((char *)s, sizeof(s), ":%ld", sctx.sc_lnum);
+		MSG_PUTS(s);
+	    }
 	    verbose_leave();
 	}
     }
